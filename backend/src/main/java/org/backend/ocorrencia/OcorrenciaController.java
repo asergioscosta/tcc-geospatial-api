@@ -3,6 +3,8 @@ package org.backend.ocorrencia;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.backend.enums.PrioridadeOcorrencia;
+import org.backend.enums.StatusOcorrencia;
 import org.backend.exception.RegraNegocioInvalidaException;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -94,9 +96,9 @@ public class OcorrenciaController {
         ocorrencia.setId(dto.getId());
         ocorrencia.setTipoOcorrencia(dto.getTipoOcorrencia());
         ocorrencia.setDescricaoOcorrencia(dto.getDescricaoOcorrencia());
-        ocorrencia.setDataHora(dto.getDataHora());
-        ocorrencia.setStatusOcorrencia(dto.getStatusOcorrencia());
-        ocorrencia.setPrioridadeOcorrencia(dto.getPrioridadeOcorrencia());
+        ocorrencia.setDataHora(dto.getData());
+        ocorrencia.setStatusOcorrencia(StatusOcorrencia.ABERTO);
+        ocorrencia.setPrioridadeOcorrencia(PrioridadeOcorrencia.MEDIA);
         ocorrencia.setLocalizacao(point);
 
         return ocorrencia;

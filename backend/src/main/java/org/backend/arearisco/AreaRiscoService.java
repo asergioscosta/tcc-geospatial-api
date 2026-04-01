@@ -52,6 +52,10 @@ public class AreaRiscoService {
             throw new RegraNegocioInvalidaException("Localização inválida");
         }
 
+        if (areaRisco.getNivelRisco() == null) {
+            throw new RegraNegocioInvalidaException("Nível de risco inválido");
+        }
+
         double latitude = areaRisco.getLocalizacao().getY();
         double longitude = areaRisco.getLocalizacao().getX();
 
