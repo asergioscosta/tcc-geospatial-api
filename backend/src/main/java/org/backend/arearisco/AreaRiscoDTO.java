@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.backend.enums.NivelRisco;
+import org.backend.enums.StatusAreaRisco;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +16,7 @@ public class AreaRiscoDTO {
     private String nome;
     private String descricao;
     private NivelRisco nivelRisco;
+    private StatusAreaRisco statusAreaRisco;
 
     @NotNull
     private Double latitude;
@@ -29,11 +31,9 @@ public class AreaRiscoDTO {
         dto.setNome(areaRisco.getNome());
         dto.setDescricao(areaRisco.getDescricao());
         dto.setNivelRisco(areaRisco.getNivelRisco());
-
-        if (areaRisco.getLocalizacao() != null) {
-            dto.setLatitude(areaRisco.getLocalizacao().getY());
-            dto.setLongitude(areaRisco.getLocalizacao().getX());
-        }
+        dto.setLatitude(areaRisco.getLatitude());
+        dto.setLongitude(areaRisco.getLongitude());
+        dto.setStatusAreaRisco(areaRisco.getStatusAreaRisco());
 
         return dto;
     }

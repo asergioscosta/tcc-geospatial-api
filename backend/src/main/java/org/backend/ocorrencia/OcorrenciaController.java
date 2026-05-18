@@ -1,19 +1,15 @@
 package org.backend.ocorrencia;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.backend.enums.PrioridadeOcorrencia;
 import org.backend.enums.StatusOcorrencia;
 import org.backend.exception.RegraNegocioInvalidaException;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,86 +18,113 @@ import java.util.stream.Collectors;
 @RequestMapping("/ocorrencias")
 @RequiredArgsConstructor
 @CrossOrigin
-@SecurityRequirement(name = "BearerAuth")
 public class OcorrenciaController {
 
     private final OcorrenciaService ocorrenciaService;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<OcorrenciaDTO>> get() {
         List<Ocorrencia> ocorrencias = ocorrenciaService.getOcorrencias();
+
         return ResponseEntity.ok(
-                ocorrencias.stream().map(OcorrenciaDTO::create).collect(Collectors.toList())
+                ocorrencias.stream()
+                        .map(OcorrenciaDTO::create)
+                        .collect(Collectors.toList())
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OcorrenciaDTO> get(@PathVariable("id") Long id) {
+    public ResponseEntity<?> get(@PathVariable Long id) {
         Optional<Ocorrencia> ocorrencia = ocorrenciaService.getOcorrenciaById(id);
-        if (!ocorrencia.isPresent()) {
-            return new ResponseEntity("Ocorrência não encontrada", HttpStatus.NOT_FOUND);
+
+        if (ocorrencia.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ocorrência não encontrada");
         }
+
         return ResponseEntity.ok(OcorrenciaDTO.create(ocorrencia.get()));
     }
 
-    @PostMapping()
-    public ResponseEntity post(@Valid @RequestBody OcorrenciaDTO dto) {
+    @PostMapping
+    public ResponseEntity<?> post(@Valid @RequestBody OcorrenciaDTO dto) {
         try {
-            Ocorrencia ocorrencia = converter(dto);
+            Ocorrencia ocorrencia = converter(dto, true, null);
             ocorrencia = ocorrenciaService.save(ocorrencia);
-            return new ResponseEntity(OcorrenciaDTO.create(ocorrencia), HttpStatus.CREATED);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(OcorrenciaDTO.create(ocorrencia));
         } catch (RegraNegocioInvalidaException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @PutMapping("{id}")
-    public ResponseEntity atualizar(@PathVariable("id") Long id, @Valid @RequestBody OcorrenciaDTO dto) {
-        if (!ocorrenciaService.getOcorrenciaById(id).isPresent()) {
-            return new ResponseEntity("Ocorrência não encontrada", HttpStatus.NOT_FOUND);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @Valid @RequestBody OcorrenciaDTO dto) {
+        Optional<Ocorrencia> existente = ocorrenciaService.getOcorrenciaById(id);
+
+        if (existente.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ocorrência não encontrada");
         }
+
         try {
-            Ocorrencia ocorrencia = converter(dto);
+            Ocorrencia ocorrencia = converter(dto, false, existente.get());
             ocorrencia.setId(id);
             ocorrencia = ocorrenciaService.save(ocorrencia);
+
             return ResponseEntity.ok(OcorrenciaDTO.create(ocorrencia));
         } catch (RegraNegocioInvalidaException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity delete(@PathVariable("id") Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         Optional<Ocorrencia> ocorrencia = ocorrenciaService.getOcorrenciaById(id);
-        if (!ocorrencia.isPresent()) {
-            return new ResponseEntity("Ocorrência não encontrada", HttpStatus.NOT_FOUND);
+
+        if (ocorrencia.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ocorrência não encontrada");
         }
-        try {
-            ocorrenciaService.delete(ocorrencia.get());
-            return new ResponseEntity(HttpStatus.NO_CONTENT);
-        } catch (RegraNegocioInvalidaException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        ocorrenciaService.delete(ocorrencia.get());
+        return ResponseEntity.noContent().build();
     }
 
-    public Ocorrencia converter(OcorrenciaDTO dto) {
-
-        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-
-        Point point = geometryFactory.createPoint(
-                new Coordinate(dto.getLongitude(), dto.getLatitude())
-        );
-
+    private Ocorrencia converter(OcorrenciaDTO dto, boolean cadastroPublico, Ocorrencia existente) {
         Ocorrencia ocorrencia = new Ocorrencia();
+
         ocorrencia.setId(dto.getId());
         ocorrencia.setTipoOcorrencia(dto.getTipoOcorrencia());
         ocorrencia.setDescricaoOcorrencia(dto.getDescricaoOcorrencia());
-        ocorrencia.setDataHora(dto.getData());
-        ocorrencia.setStatusOcorrencia(StatusOcorrencia.ABERTO);
-        ocorrencia.setPrioridadeOcorrencia(PrioridadeOcorrencia.MEDIA);
-        ocorrencia.setLocalizacao(point);
+        ocorrencia.setLatitude(dto.getLatitude());
+        ocorrencia.setLongitude(dto.getLongitude());
+
+        if (dto.getData() != null) {
+            ocorrencia.setDataHora(dto.getData());
+        } else if (existente != null && existente.getDataHora() != null) {
+            ocorrencia.setDataHora(existente.getDataHora());
+        } else {
+            ocorrencia.setDataHora(LocalDateTime.now());
+        }
+
+        if (cadastroPublico) {
+            ocorrencia.setStatusOcorrencia(StatusOcorrencia.ABERTO);
+            ocorrencia.setPrioridadeOcorrencia(PrioridadeOcorrencia.MEDIA);
+        } else {
+            ocorrencia.setStatusOcorrencia(
+                    dto.getStatusOcorrencia() != null
+                            ? dto.getStatusOcorrencia()
+                            : existente.getStatusOcorrencia()
+            );
+
+            ocorrencia.setPrioridadeOcorrencia(
+                    dto.getPrioridadeOcorrencia() != null
+                            ? dto.getPrioridadeOcorrencia()
+                            : existente.getPrioridadeOcorrencia()
+            );
+        }
 
         return ocorrencia;
     }
-
 }

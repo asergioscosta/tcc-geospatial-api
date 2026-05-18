@@ -10,7 +10,7 @@ import java.util.Optional;
 @Service
 public class OcorrenciaService {
 
-    private OcorrenciaRepository ocorrenciaRepository;
+    private final OcorrenciaRepository ocorrenciaRepository;
 
     public OcorrenciaService(OcorrenciaRepository ocorrenciaRepository) {
         this.ocorrenciaRepository = ocorrenciaRepository;
@@ -35,21 +35,17 @@ public class OcorrenciaService {
         if (ocorrencia.getId() == null) {
             throw new RegraNegocioInvalidaException("ID não pode ser nulo");
         }
+
         ocorrenciaRepository.delete(ocorrencia);
     }
 
     public void validar(Ocorrencia ocorrencia) {
-
         if (ocorrencia.getDescricaoOcorrencia() == null || ocorrencia.getDescricaoOcorrencia().isBlank()) {
             throw new RegraNegocioInvalidaException("Descrição da Ocorrência inválida");
         }
 
         if (ocorrencia.getPrioridadeOcorrencia() == null) {
             throw new RegraNegocioInvalidaException("Prioridade da Ocorrência inválida");
-        }
-
-        if (ocorrencia.getLocalizacao() == null) {
-            throw new RegraNegocioInvalidaException("Localização inválida");
         }
 
         if (ocorrencia.getDataHora() == null) {
@@ -64,14 +60,11 @@ public class OcorrenciaService {
             throw new RegraNegocioInvalidaException("Status da Ocorrência inválido");
         }
 
-        double latitude = ocorrencia.getLocalizacao().getY();
-        double longitude = ocorrencia.getLocalizacao().getX();
-
-        if (latitude < -90 || latitude > 90) {
+        if (ocorrencia.getLatitude() == null || ocorrencia.getLatitude() < -90 || ocorrencia.getLatitude() > 90) {
             throw new RegraNegocioInvalidaException("Latitude inválida");
         }
 
-        if (longitude < -180 || longitude > 180) {
+        if (ocorrencia.getLongitude() == null || ocorrencia.getLongitude() < -180 || ocorrencia.getLongitude() > 180) {
             throw new RegraNegocioInvalidaException("Longitude inválida");
         }
     }

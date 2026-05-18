@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.backend.enums.PrioridadeOcorrencia;
+import org.backend.enums.StatusOcorrencia;
 import org.backend.enums.TipoOcorrencia;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ public class OcorrenciaDTO {
     private TipoOcorrencia tipoOcorrencia;
     private String descricaoOcorrencia;
     private LocalDateTime data;
+    private StatusOcorrencia statusOcorrencia;
+    private PrioridadeOcorrencia prioridadeOcorrencia;
 
     @NotNull
     private Double latitude;
@@ -25,17 +29,16 @@ public class OcorrenciaDTO {
     private Double longitude;
 
     public static OcorrenciaDTO create(Ocorrencia ocorrencia) {
-
         OcorrenciaDTO dto = new OcorrenciaDTO();
 
         dto.setId(ocorrencia.getId());
         dto.setTipoOcorrencia(ocorrencia.getTipoOcorrencia());
         dto.setDescricaoOcorrencia(ocorrencia.getDescricaoOcorrencia());
-
-        if (ocorrencia.getLocalizacao() != null) {
-            dto.setLatitude(ocorrencia.getLocalizacao().getY());
-            dto.setLongitude(ocorrencia.getLocalizacao().getX());
-        }
+        dto.setData(ocorrencia.getDataHora());
+        dto.setStatusOcorrencia(ocorrencia.getStatusOcorrencia());
+        dto.setPrioridadeOcorrencia(ocorrencia.getPrioridadeOcorrencia());
+        dto.setLatitude(ocorrencia.getLatitude());
+        dto.setLongitude(ocorrencia.getLongitude());
 
         return dto;
     }

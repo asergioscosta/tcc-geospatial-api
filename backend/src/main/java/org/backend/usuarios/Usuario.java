@@ -25,7 +25,11 @@ public class Usuario implements UserDetails {
     private Long id;
 
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String login;
+
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +44,7 @@ public class Usuario implements UserDetails {
                     new SimpleGrantedAuthority(UserRole.USER.getAuthority())
             );
         }
+
         return List.of(new SimpleGrantedAuthority(UserRole.USER.getAuthority()));
     }
 
@@ -60,6 +65,11 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
         return true;
     }
 

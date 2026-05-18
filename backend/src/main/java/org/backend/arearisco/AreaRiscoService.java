@@ -10,7 +10,7 @@ import java.util.Optional;
 @Service
 public class AreaRiscoService {
 
-    private AreaRiscoRepository areaRiscoRepository;
+    private final AreaRiscoRepository areaRiscoRepository;
 
     public AreaRiscoService(AreaRiscoRepository areaRiscoRepository) {
         this.areaRiscoRepository = areaRiscoRepository;
@@ -35,11 +35,11 @@ public class AreaRiscoService {
         if (areaRisco.getId() == null) {
             throw new RegraNegocioInvalidaException("ID não pode ser nulo");
         }
+
         areaRiscoRepository.delete(areaRisco);
     }
 
     public void validar(AreaRisco areaRisco) {
-
         if (areaRisco.getNome() == null || areaRisco.getNome().isBlank()) {
             throw new RegraNegocioInvalidaException("Nome inválido");
         }
@@ -48,22 +48,15 @@ public class AreaRiscoService {
             throw new RegraNegocioInvalidaException("Descrição inválida");
         }
 
-        if (areaRisco.getLocalizacao() == null) {
-            throw new RegraNegocioInvalidaException("Localização inválida");
-        }
-
         if (areaRisco.getNivelRisco() == null) {
             throw new RegraNegocioInvalidaException("Nível de risco inválido");
         }
 
-        double latitude = areaRisco.getLocalizacao().getY();
-        double longitude = areaRisco.getLocalizacao().getX();
-
-        if (latitude < -90 || latitude > 90) {
+        if (areaRisco.getLatitude() == null || areaRisco.getLatitude() < -90 || areaRisco.getLatitude() > 90) {
             throw new RegraNegocioInvalidaException("Latitude inválida");
         }
 
-        if (longitude < -180 || longitude > 180) {
+        if (areaRisco.getLongitude() == null || areaRisco.getLongitude() < -180 || areaRisco.getLongitude() > 180) {
             throw new RegraNegocioInvalidaException("Longitude inválida");
         }
     }

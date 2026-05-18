@@ -33,12 +33,9 @@ public class UsuarioService implements UserDetailsService {
 
     @Transactional
     public Usuario save(Usuario usuario) {
-        if (usuario.getPassword() != null) {
-
-            if (!isSenhaCriptografada(usuario.getPassword())) {
-                validarSenha(usuario.getPassword());
-                usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-            }
+        if (usuario.getPassword() != null && !isSenhaCriptografada(usuario.getPassword())) {
+            validarSenha(usuario.getPassword());
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         }
 
         if (usuario.getUserRole() == null) {
@@ -46,22 +43,26 @@ public class UsuarioService implements UserDetailsService {
         }
 
         validar(usuario);
+
         return usuarioRepository.save(usuario);
     }
 
     private boolean isSenhaCriptografada(String senha) {
-        return senha.startsWith("$2a$") ||
-                senha.startsWith("$2b$") ||
-                senha.startsWith("$2y$");
+        return senha != null &&
+                (senha.startsWith("$2a$") ||
+                        senha.startsWith("$2b$") ||
+                        senha.startsWith("$2y$"));
     }
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        UserDetails user = usuarioRepository.findByLogin(login);
-        if (user == null) {
+        Usuario usuario = usuarioRepository.findByLogin(login);
+
+        if (usuario == null) {
             throw new UsernameNotFoundException("Usuário não encontrado: " + login);
         }
-        return user;
+
+        return usuario;
     }
 
     @Transactional

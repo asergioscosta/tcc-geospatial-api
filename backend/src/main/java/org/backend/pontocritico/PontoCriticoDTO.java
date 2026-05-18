@@ -25,7 +25,6 @@ public class PontoCriticoDTO {
     private Double longitude;
 
     public static PontoCriticoDTO create(PontoCritico pontoCritico) {
-
         PontoCriticoDTO dto = new PontoCriticoDTO();
 
         dto.setId(pontoCritico.getId());
@@ -33,11 +32,8 @@ public class PontoCriticoDTO {
         dto.setDescricaoPontoCritico(pontoCritico.getDescricaoPontoCritico());
         dto.setTipoPontoCritico(pontoCritico.getTipoPontoCritico());
         dto.setStatusPontoCritico(pontoCritico.getStatusPontoCritico());
-
-        if (pontoCritico.getLocalizacao() != null) {
-            dto.setLatitude(pontoCritico.getLocalizacao().getY());
-            dto.setLongitude(pontoCritico.getLocalizacao().getX());
-        }
+        dto.setLatitude(pontoCritico.getLatitude());
+        dto.setLongitude(pontoCritico.getLongitude());
 
         return dto;
     }

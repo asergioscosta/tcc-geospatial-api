@@ -10,8 +10,7 @@ import java.util.Optional;
 @Service
 public class PontoCriticoService {
 
-
-    private PontoCriticoRepository pontoCriticoRepository;
+    private final PontoCriticoRepository pontoCriticoRepository;
 
     public PontoCriticoService(PontoCriticoRepository pontoCriticoRepository) {
         this.pontoCriticoRepository = pontoCriticoRepository;
@@ -36,21 +35,17 @@ public class PontoCriticoService {
         if (pontoCritico.getId() == null) {
             throw new RegraNegocioInvalidaException("ID não pode ser nulo");
         }
+
         pontoCriticoRepository.delete(pontoCritico);
     }
 
     public void validar(PontoCritico pontoCritico) {
-
         if (pontoCritico.getNomePontoCritico() == null || pontoCritico.getNomePontoCritico().isBlank()) {
             throw new RegraNegocioInvalidaException("Nome do Ponto Crítico inválido");
         }
 
-        if (pontoCritico.getDescricaoPontoCritico() == null) {
-            throw new RegraNegocioInvalidaException("Descrição do Ponto Crítico inválido");
-        }
-
-        if (pontoCritico.getLocalizacao() == null) {
-            throw new RegraNegocioInvalidaException("Localização inválida");
+        if (pontoCritico.getDescricaoPontoCritico() == null || pontoCritico.getDescricaoPontoCritico().isBlank()) {
+            throw new RegraNegocioInvalidaException("Descrição do Ponto Crítico inválida");
         }
 
         if (pontoCritico.getTipoPontoCritico() == null) {
@@ -61,14 +56,11 @@ public class PontoCriticoService {
             throw new RegraNegocioInvalidaException("Status do Ponto Crítico inválido");
         }
 
-        double latitude = pontoCritico.getLocalizacao().getY();
-        double longitude = pontoCritico.getLocalizacao().getX();
-
-        if (latitude < -90 || latitude > 90) {
+        if (pontoCritico.getLatitude() == null || pontoCritico.getLatitude() < -90 || pontoCritico.getLatitude() > 90) {
             throw new RegraNegocioInvalidaException("Latitude inválida");
         }
 
-        if (longitude < -180 || longitude > 180) {
+        if (pontoCritico.getLongitude() == null || pontoCritico.getLongitude() < -180 || pontoCritico.getLongitude() > 180) {
             throw new RegraNegocioInvalidaException("Longitude inválida");
         }
     }

@@ -2,23 +2,28 @@ package org.backend.pontocritico;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.backend.enums.StatusPontoCritico;
 import org.backend.enums.TipoPontoCritico;
-import org.locationtech.jts.geom.Point;
 
 @Entity
+@Table(name = "ponto_critico")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PontoCritico {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nomePontoCritico;
+
+    @Column(nullable = false)
     private String descricaoPontoCritico;
 
     @Enumerated(EnumType.STRING)
@@ -29,6 +34,9 @@ public class PontoCritico {
     @Column(nullable = false)
     private StatusPontoCritico statusPontoCritico;
 
-    @Column(nullable = false, columnDefinition = "geometry(Point, 4326)")
-    private Point localizacao;
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
 }

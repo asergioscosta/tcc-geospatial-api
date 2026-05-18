@@ -3,19 +3,22 @@ package org.backend.arearisco;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.backend.enums.NivelRisco;
-import org.locationtech.jts.geom.Point;
+import org.backend.enums.StatusAreaRisco;
 
 @Entity
+@Table(name = "area_risco")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AreaRisco {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
@@ -28,6 +31,13 @@ public class AreaRisco {
     @Column(nullable = false)
     private NivelRisco nivelRisco;
 
-    @Column(nullable = false, columnDefinition = "geometry(Point, 4326)")
-    private Point localizacao;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusAreaRisco statusAreaRisco;
+
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
 }

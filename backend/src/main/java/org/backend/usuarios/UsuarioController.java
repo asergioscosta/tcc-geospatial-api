@@ -3,21 +3,17 @@ package org.backend.usuarios;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.backend.enums.UserRole;
-import org.backend.exception.RecursoNaoEncontradoException;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.backend.exception.RegraNegocioInvalidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -25,82 +21,58 @@ import java.util.stream.Collectors;
 @CrossOrigin
 public class UsuarioController {
 
-    @Autowired
     private final UsuarioService usuarioService;
-
-    @Autowired
     private final TokenService tokenService;
+    private final AuthenticationManager authenticationManager;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    @GetMapping
+    public ResponseEntity<List<UsuarioDTO>> get() {
+        List<UsuarioDTO> usuarios = usuarioService.getUsuarios()
+                .stream()
+                .map(UsuarioDTO::create)
+                .toList();
 
-    @Autowired
-    private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @GetMapping()
-    public ResponseEntity get() {
-        List<Usuario> usuarios = usuarioService.getUsuarios();
-        return ResponseEntity.ok(usuarios.stream().map(UsuarioDTO::create).collect(Collectors.toList()));
+        return ResponseEntity.ok(usuarios);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity get(@PathVariable("id") Long id) {
+    public ResponseEntity<?> get(@PathVariable Long id) {
         Optional<Usuario> usuario = usuarioService.getUsuarioById(id);
-        if (!usuario.isPresent()) {
-            return new ResponseEntity("Usuário não encontrado", HttpStatus.NOT_FOUND);
+
+        if (usuario.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuário não encontrado");
         }
-        return ResponseEntity.ok(usuario.map(UsuarioDTO::create));
+
+        return ResponseEntity.ok(UsuarioDTO.create(usuario.get()));
     }
 
-    @PostMapping()
-    public ResponseEntity post(@RequestBody UsuarioDTO dto) {
+    @PostMapping
+    public ResponseEntity<?> post(@RequestBody UsuarioRequestDTO dto) {
         try {
-            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Senha não pode ser vazia");
-            }
-            if (!validarSenha(dto.getPassword())) {
-                return ResponseEntity.badRequest().body(
-                        "A senha deve conter:\n" +
-                                "- Mínimo 8 caracteres\n" +
-                                "- Pelo menos 1 letra minúscula\n" +
-                                "- Pelo menos 1 letra maiúscula\n" +
-                                "- Pelo menos 1 número\n" +
-                                "- Pelo menos 1 caractere especial (!@#$% etc.)"
-                );
-            }
             if (usuarioRepository.existsByLogin(dto.getLogin())) {
                 return ResponseEntity.badRequest().body("Login já está em uso");
             }
 
-            Usuario usuario = converter(dto);
-
+            Usuario usuario = new Usuario();
+            usuario.setName(dto.getName());
+            usuario.setLogin(dto.getLogin());
+            usuario.setPassword(dto.getPassword());
             usuario.setUserRole(UserRole.USER);
 
-            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
             usuario = usuarioService.save(usuario);
 
-            return new ResponseEntity(UsuarioDTO.create(usuario), HttpStatus.CREATED);
-        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioDTO.create(usuario));
+        } catch (RegraNegocioInvalidaException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    private boolean validarSenha(String senha) {
-        return senha != null &&
-                senha.length() >= 8 &&
-                senha.matches(".*[a-z].*") &&
-                senha.matches(".*[A-Z].*") &&
-                senha.matches(".*\\d.*") &&
-                senha.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*"); // 1 especial
-    }
-
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid CredenciaisDTO data) {
+    public ResponseEntity<?> login(@RequestBody @Valid CredenciaisDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.getLogin(), data.getPassword());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
+        var auth = authenticationManager.authenticate(usernamePassword);
 
         var usuario = (Usuario) auth.getPrincipal();
         var token = tokenService.generateToken(usuario);
@@ -119,63 +91,56 @@ public class UsuarioController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("{id}")
-    public ResponseEntity atualizar(@PathVariable("id") Long id, @RequestBody UsuarioDTO dto) {
-        Optional<Usuario> usuarioExistente = usuarioService.getUsuarioById(id);
-        if (!usuarioExistente.isPresent()) {
-            return new ResponseEntity("Usuário não encontrado", HttpStatus.NOT_FOUND);
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody UsuarioRequestDTO dto) {
         try {
-            if (!usuarioExistente.get().getLogin().equals(dto.getLogin()) &&
+            var usuarioExistente = usuarioService.getUsuarioById(id);
+
+            if (usuarioExistente.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
+            }
+
+            Usuario usuario = usuarioExistente.get();
+
+            if (dto.getLogin() != null &&
+                    !usuario.getLogin().equals(dto.getLogin()) &&
                     usuarioRepository.existsByLogin(dto.getLogin())) {
                 return ResponseEntity.badRequest().body("Login já está em uso");
             }
 
-            Usuario usuario = converter(dto);
-            usuario.setId(id);
+            if (dto.getName() != null) {
+                usuario.setName(dto.getName());
+            }
 
-            if (dto.getUserRole() == null) {
-                usuario.setUserRole(usuarioExistente.get().getUserRole());
+            if (dto.getLogin() != null) {
+                usuario.setLogin(dto.getLogin());
             }
-            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-                usuario.setPassword(usuarioExistente.get().getPassword());
-            } else {
-                if (!validarSenha(dto.getPassword())) {
-                    return ResponseEntity.badRequest().body(
-                            "A senha deve conter:\n" +
-                                    "- Mínimo 8 caracteres\n" +
-                                    "- Pelo menos 1 letra minúscula\n" +
-                                    "- Pelo menos 1 letra maiúscula\n" +
-                                    "- Pelo menos 1 número\n" +
-                                    "- Pelo menos 1 caractere especial (!@#$% etc.)"
-                    );
-                }
-                usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                usuario.setPassword(dto.getPassword());
             }
+
+            if (dto.getUserRole() != null) {
+                usuario.setUserRole(dto.getUserRole());
+            }
+
             usuario = usuarioService.save(usuario);
+
             return ResponseEntity.ok(UsuarioDTO.create(usuario));
-        } catch (RecursoNaoEncontradoException e) {
+        } catch (RegraNegocioInvalidaException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity delete(@PathVariable("id") Long id) {
-        Optional<Usuario> usuario = usuarioService.getUsuarioById(id);
-        if (!usuario.isPresent()) {
-            return new ResponseEntity("Usuário não encontrado", HttpStatus.NOT_FOUND);
-        }
-        try {
-            usuarioService.delete(usuario.get());
-            return new ResponseEntity(HttpStatus.NO_CONTENT);
-        } catch (RecursoNaoEncontradoException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        var usuario = usuarioService.getUsuarioById(id);
 
-    public Usuario converter(UsuarioDTO dto) {
-        ModelMapper modelMapper = new ModelMapper();
-        Usuario usuario = modelMapper.map(dto, Usuario.class);
-        return usuario;
+        if (usuario.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
+        }
+
+        usuarioService.delete(usuario.get());
+        return ResponseEntity.noContent().build();
     }
 }

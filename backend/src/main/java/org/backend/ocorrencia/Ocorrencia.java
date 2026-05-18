@@ -2,19 +2,21 @@ package org.backend.ocorrencia;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.backend.enums.PrioridadeOcorrencia;
 import org.backend.enums.StatusOcorrencia;
 import org.backend.enums.TipoOcorrencia;
-import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "ocorrencia")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Ocorrencia {
 
     @Id
@@ -25,8 +27,10 @@ public class Ocorrencia {
     @Column(nullable = false)
     private TipoOcorrencia tipoOcorrencia;
 
+    @Column(nullable = false)
     private String descricaoOcorrencia;
 
+    @Column(nullable = false)
     private LocalDateTime dataHora;
 
     @Enumerated(EnumType.STRING)
@@ -37,6 +41,9 @@ public class Ocorrencia {
     @Column(nullable = false)
     private PrioridadeOcorrencia prioridadeOcorrencia;
 
-    @Column(nullable = false, columnDefinition = "geometry(Point, 4326)")
-    private Point localizacao;
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
 }
