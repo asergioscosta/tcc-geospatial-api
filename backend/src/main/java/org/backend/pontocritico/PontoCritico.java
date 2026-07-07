@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.backend.enums.NivelRisco;
 import org.backend.enums.StatusPontoCritico;
 import org.backend.enums.TipoPontoCritico;
 
@@ -39,4 +40,8 @@ public class PontoCritico {
 
     @Column(nullable = false)
     private Double longitude;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NivelRisco nivelRisco;
 }

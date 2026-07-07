@@ -96,6 +96,7 @@ public class PontoCriticoController {
         pontoCritico.setNomePontoCritico(dto.getNomePontoCritico());
         pontoCritico.setDescricaoPontoCritico(dto.getDescricaoPontoCritico());
         pontoCritico.setTipoPontoCritico(dto.getTipoPontoCritico());
+        pontoCritico.setNivelRisco(dto.getNivelRisco());
         pontoCritico.setLatitude(dto.getLatitude());
         pontoCritico.setLongitude(dto.getLongitude());
 

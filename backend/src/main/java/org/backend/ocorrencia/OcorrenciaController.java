@@ -97,6 +97,7 @@ public class OcorrenciaController {
         ocorrencia.setId(dto.getId());
         ocorrencia.setTipoOcorrencia(dto.getTipoOcorrencia());
         ocorrencia.setDescricaoOcorrencia(dto.getDescricaoOcorrencia());
+        ocorrencia.setNivelRisco(dto.getNivelRisco());
         ocorrencia.setLatitude(dto.getLatitude());
         ocorrencia.setLongitude(dto.getLongitude());
 

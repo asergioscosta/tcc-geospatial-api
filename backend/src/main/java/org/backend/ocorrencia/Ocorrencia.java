@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.backend.enums.NivelRisco;
 import org.backend.enums.PrioridadeOcorrencia;
 import org.backend.enums.StatusOcorrencia;
 import org.backend.enums.TipoOcorrencia;
@@ -46,4 +47,8 @@ public class Ocorrencia {
 
     @Column(nullable = false)
     private Double longitude;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NivelRisco nivelRisco;
 }

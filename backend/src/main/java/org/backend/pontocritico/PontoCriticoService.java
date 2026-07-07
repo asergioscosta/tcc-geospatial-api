@@ -56,6 +56,10 @@ public class PontoCriticoService {
             throw new RegraNegocioInvalidaException("Status do Ponto Crítico inválido");
         }
 
+        if (pontoCritico.getNivelRisco() == null) {
+            throw new RegraNegocioInvalidaException("Nível de risco inválido");
+        }
+
         if (pontoCritico.getLatitude() == null || pontoCritico.getLatitude() < -90 || pontoCritico.getLatitude() > 90) {
             throw new RegraNegocioInvalidaException("Latitude inválida");
         }

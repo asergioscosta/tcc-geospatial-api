@@ -60,6 +60,10 @@ public class OcorrenciaService {
             throw new RegraNegocioInvalidaException("Status da Ocorrência inválido");
         }
 
+        if (ocorrencia.getNivelRisco() == null) {
+            throw new RegraNegocioInvalidaException("Nível de risco inválido");
+        }
+
         if (ocorrencia.getLatitude() == null || ocorrencia.getLatitude() < -90 || ocorrencia.getLatitude() > 90) {
             throw new RegraNegocioInvalidaException("Latitude inválida");
         }
